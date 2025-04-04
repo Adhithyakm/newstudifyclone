@@ -30,3 +30,25 @@ export const verifyUser = (email: string): boolean => {
   const parsedData = JSON.parse(userData) as UserData;
   return email.toLowerCase() === parsedData.email.toLowerCase();
 };
+
+// Add session participation tracking
+export const trackSessionParticipation = async (sessionCode: string) => {
+  try {
+    const userData = localStorage.getItem('user');
+    if (!userData) return;
+
+    const user = JSON.parse(userData);
+    await fetch(`/api/sessions/${sessionCode}/participants`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: user.id,
+        joinedAt: new Date().toISOString()
+      })
+    });
+  } catch (error) {
+    console.error('Error tracking participation:', error);
+  }
+};

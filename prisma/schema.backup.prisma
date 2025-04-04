@@ -1,0 +1,87 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  password    String
+  phoneNumber String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  profile     Profile?
+  sessions    Session[]
+
+  @@map("users")
+}
+
+model Profile {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @unique
+  department    String?
+  semester      Int?
+  skills        String[]
+  score         Float?
+  yearOfPassout Int?
+  achievements  String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("profiles")
+}
+
+model Resource {
+  id          String   @id
+  title       String
+  description String?
+  fileSize    String
+  uploadDate  DateTime @default(now())
+  fileUrl     String
+  subjectId   Int
+  downloads   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  Subject     Subject  @relation(fields: [subjectId], references: [id])
+}
+
+model Semester {
+  id      Int       @id @default(autoincrement())
+  number  Int       @unique
+  name    String    @unique
+  Subject Subject[]
+}
+
+model Subject {
+  id         Int        @id @default(autoincrement())
+  name       String
+  semesterId Int
+  code       String     @unique
+  Resource   Resource[]
+  Semester   Semester   @relation(fields: [semesterId], references: [id])
+}
+
+model Session {
+  id             String    @id @default(uuid())
+  classCode      String    @unique
+  topic          String
+  instructorName String
+  startTime      DateTime
+  endTime        DateTime
+  status         String     @default("scheduled") // scheduled, ongoing, completed
+  meetingLink    String?
+  participants   Json?      // Store participant list
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User?     @relation(fields: [userId], references: [id])
+  userId         Int?      // Changed to match User.id type
+
+  @@map("sessions")
+}

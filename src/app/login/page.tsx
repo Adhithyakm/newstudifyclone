@@ -10,15 +10,12 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      console.log("Attempting login with email:", email);
-
       const response = await fetch("/api/signin", {
         method: "POST",
         headers: {
@@ -27,46 +24,52 @@ const LoginPage: React.FC = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      console.log("Response status:", response.status);
+      // Handle non-JSON responses more gracefully
+      const textResponse = await response.text();
+      let data;
 
-      // Check if response is actually JSON before parsing
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        console.error("Expected JSON but got:", contentType);
-        throw new Error("Server returned an invalid response format");
+      try {
+        data = JSON.parse(textResponse);
+      } catch (jsonError) {
+        throw new Error(
+          response.status === 500
+            ? "Internal server error. Please try again later."
+            : "Invalid server response"
+        );
       }
-
-      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Login failed");
+        throw new Error(
+          data.error || "Login failed. Please check your credentials."
+        );
       }
-
-      console.log("Login successful, storing data");
 
       // Store authentication data
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
-
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      // Redirect to profile page
       router.push("/home");
     } catch (error) {
       console.error("Login error:", error);
+      let errorMessage = "An unexpected error occurred";
+
       if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError("An unexpected error occurred");
+        errorMessage = error.message;
+        // Handle specific error cases
+        if (errorMessage.includes("Internal server error")) {
+          errorMessage = "Server error. Please try again later.";
+        }
       }
+
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">

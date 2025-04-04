@@ -1,11 +1,17 @@
 import { PrismaClient } from '@prisma/client'
 
+// Type-safe global prisma client
 declare global {
-  let prisma: PrismaClient | undefined
+  var prisma: PrismaClient | undefined
 }
 
-const prisma = globalThis.prisma || new PrismaClient()
+// Proper initialization pattern for Next.js
+const prisma = globalThis.prisma || new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
+})
 
-if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.prisma = prisma
+}
 
 export default prisma
