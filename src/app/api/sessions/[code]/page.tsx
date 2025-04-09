@@ -4,14 +4,7 @@ import dynamic from "next/dynamic";
 import Navbar from "@/app/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
-
-const JitsiMeet = dynamic(() => import("@/app/components/JitsiMeeting"), {
-  ssr: false,
-  loading: () => (
-    <div className="text-center p-4">Initializing meeting room...</div>
-  ),
-});
-
+newstud;
 export default function SessionPage() {
   const { code } = useParams();
   const { user } = useAuth();
